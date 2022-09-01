@@ -56,6 +56,11 @@ impl Language {
         &self.short_name
     }
 
+    /// Get language lookup table 
+    pub fn strings(&self) -> &HashMap::<String, String> {
+        &self.strings
+    }
+
     /// Look up a string in the given language
 	/// 
 	/// # Arguments

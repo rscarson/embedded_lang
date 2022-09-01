@@ -20,7 +20,7 @@
 //! 
 //! LanguageSets have a current language, and a fallback language from which strings will be fetched
 //! if the current language is missing the requested string.
-#![doc(html_root_url = "https://docs.rs/embedded-lang/0.5.1")]
+#![doc(html_root_url = "https://docs.rs/embedded-lang/0.5.2")]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
 
