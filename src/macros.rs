@@ -15,7 +15,7 @@ macro_rules! embedded_language {
 /// * `filename` - Path to the file to embed
 #[macro_export]
 macro_rules! get_string {
-    ($set:ident, $name:literal) => {
+    ($set:expr, $name:expr) => {
         $set.get($name).unwrap_or_default()
     };
 }
@@ -39,6 +39,10 @@ mod test_token {
         ]);
         set.set_fallback_language("en");
 
+        assert_eq!(get_string!(LanguageSet::new("fr", &[
+            embedded_language!("../examples/en.lang.json"),
+            embedded_language!("../examples/fr.lang.json"),
+        ]), "foobar"), "".to_string());
         assert_eq!(get_string!(set, "foobar"), "".to_string());
         assert_eq!(get_string!(set, "mustard"), "mustard".to_string());
     }
