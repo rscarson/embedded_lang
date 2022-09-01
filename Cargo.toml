@@ -1,18 +1,15 @@
 [package]
 name = "embedded-lang"
-description = "Embedded JSON language strings"
+description = "Embedded language resources for rust applications"
 license = "MIT OR Apache-2.0"
 keywords = ["language", "text", "json", "embedded"]
-categories = []
+categories = ["accessibility", "configuration", "encoding", "localization"]
 repository = "https://github.com/rscarson/embedded_lang"
 readme = "readme.md"
-version = "0.0.1"
+version = "0.5.0"
 edition = "2021"
 
 [dependencies]
-regex = "1.6.0"
-pest = "2.1.3"
-pest_derive = "2.1.0"
 serde = { version = "1.0.139", features = ["derive"] }
 serde_json = "1.0.82"
 

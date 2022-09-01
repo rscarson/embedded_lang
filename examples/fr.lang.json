@@ -1,0 +1,8 @@
+{
+    "name": "Français",
+    "short_name": "fr",
+    "strings": {
+        "tree": "arbre",
+        "hello_msg": "Bonjour à tous!"
+    }
+}

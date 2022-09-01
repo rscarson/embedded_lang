@@ -1,0 +1,9 @@
+{
+    "name": "English",
+    "short_name": "en",
+    "strings": {
+        "tree": "tree",
+        "mustard": "mustard",
+        "hello_msg": "hello world!"
+    }
+}
