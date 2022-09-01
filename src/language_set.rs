@@ -1,8 +1,10 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::Language;
 
 /// A searchable set of language string instances
+#[derive(Serialize, Deserialize, Clone)]
 pub struct LanguageSet {
     current: String,
     fallback: String,

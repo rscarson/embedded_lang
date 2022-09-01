@@ -6,7 +6,7 @@ keywords = ["language", "text", "json", "embedded"]
 categories = ["accessibility", "encoding", "localization"]
 repository = "https://github.com/rscarson/embedded_lang"
 readme = "readme.md"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 
 [dependencies]
