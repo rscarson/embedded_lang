@@ -26,13 +26,13 @@ impl LanguageSet {
     }
 
     /// Return the set's fallback language
-    pub fn fallback_language(&self) -> &str {
-        &self.fallback
+    pub fn fallback_language(&self) -> Option<&Language> {
+        self.languages.get(&self.fallback)
     }
 
     /// Return the set's current language
-    pub fn current_language(&self) -> &str {
-        &self.current
+    pub fn current_language(&self) -> Option<&Language> {
+        self.languages.get(&self.current)
     }
 
     /// Add a language to the set
@@ -128,9 +128,9 @@ mod test_token {
             embedded_language!("../examples/fr.lang.json"),
         ]);
         
-        assert_eq!(set.current_language(), "fr");
+        assert_eq!(set.current_language().unwrap().short_name(), "fr");
         set.set_language("en");
-        assert_eq!(set.current_language(), "en");
+        assert_eq!(set.current_language().unwrap().short_name(), "en");
     }
 
     #[test]
@@ -140,9 +140,9 @@ mod test_token {
             embedded_language!("../examples/fr.lang.json"),
         ]);
         
-        assert_eq!(set.fallback_language(), "fr");
+        assert_eq!(set.fallback_language().unwrap().short_name(), "fr");
         set.set_fallback_language("en");
-        assert_eq!(set.fallback_language(), "en");
+        assert_eq!(set.fallback_language().unwrap().short_name(), "en");
     }
 
     #[test]
@@ -176,10 +176,10 @@ mod test_token {
         ]);
         
         assert_eq!(set.set_fallback_language("en"), true);
-        assert_eq!(set.fallback_language(), "en");
+        assert_eq!(set.fallback_language().unwrap().short_name(), "en");
         
         assert_eq!(set.set_fallback_language("foo"), false);
-        assert_eq!(set.fallback_language(), "en");
+        assert_eq!(set.fallback_language().unwrap().short_name(), "en");
     }
 
     #[test]
@@ -190,10 +190,10 @@ mod test_token {
         ]);
         
         assert_eq!(set.set_language("en"), true);
-        assert_eq!(set.current_language(), "en");
+        assert_eq!(set.current_language().unwrap().short_name(), "en");
         
         assert_eq!(set.set_language("foo"), false);
-        assert_eq!(set.current_language(), "en");
+        assert_eq!(set.current_language().unwrap().short_name(), "en");
     }
 
     #[test]
