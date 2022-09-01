@@ -1,4 +1,4 @@
-# embedd_lang: Embedded language resources for rust applications
+# embedded_lang: Embedded language resources for rust applications
 [![Crates.io](https://img.shields.io/crates/v/embedded_lang.svg)](https://crates.io/crates/embedded_lang)
 [![Build Status](https://github.com/rscarson/embedded_lang/workflows/Rust/badge.svg)](https://github.com/rscarson/embedded_lang/actions?workflow=Rust)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rscarson/embedded_lang/master/LICENSE)
