@@ -28,7 +28,7 @@ mod test_token {
     #[test]
     fn test_embedded_language() {
         let lang = embedded_language!("../examples/en.lang.json");
-        assert_eq!(lang.get("hello_msg"), Some("hello world!".to_string()));
+        assert_eq!(lang.get("hello_msg"), Some("hello world!"));
     }
 
     #[test]
@@ -42,8 +42,8 @@ mod test_token {
         assert_eq!(get_string!(LanguageSet::new("fr", &[
             embedded_language!("../examples/en.lang.json"),
             embedded_language!("../examples/fr.lang.json"),
-        ]), "foobar"), "".to_string());
-        assert_eq!(get_string!(set, "foobar"), "".to_string());
-        assert_eq!(get_string!(set, "mustard"), "mustard".to_string());
+        ]), "foobar"), "");
+        assert_eq!(get_string!(set, "foobar"), "");
+        assert_eq!(get_string!(set, "mustard"), "mustard");
     }
 }

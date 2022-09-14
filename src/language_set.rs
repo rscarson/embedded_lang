@@ -1,3 +1,4 @@
+use std::ops::Index;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -88,7 +89,7 @@ impl LanguageSet {
 	/// # Arguments
 	/// * `language` - Language to search
 	/// * `name` - String to find
-    pub fn get_from_lang(&self, language: &str, name: &str) -> Option<String> {
+    pub fn get_from_lang(&self, language: &str, name: &str) -> Option<&str> {
         if let Some(lang) = self.languages.get(language) {
             if let Some(s) = lang.get(name) {
                 return Some(s)
@@ -102,7 +103,7 @@ impl LanguageSet {
 	/// 
 	/// # Arguments
 	/// * `name` - String to find
-    pub fn get(&self, name: &str) -> Option<String> {
+    pub fn get(&self, name: &str) -> Option<&str> {
         if let Some(s) = self.get_from_lang(&self.current, name) {
             return Some(s)
         }
@@ -114,6 +115,15 @@ impl LanguageSet {
         None
     }
 }
+
+impl Index<&str> for LanguageSet {
+    type Output = str;
+
+    fn index(&self, name: &str) -> &Self::Output {
+        self.get(name).unwrap_or_default()
+    }
+}
+
 
 #[cfg(test)]
 mod test_token {
@@ -204,7 +214,7 @@ mod test_token {
         ]);
         set.set_fallback_language("en");
 
-        assert_eq!(set.get_from_lang("fr", "tree"), Some("arbre".to_string()));
+        assert_eq!(set.get_from_lang("fr", "tree"), Some("arbre"));
         assert_eq!(set.get_from_lang("fr", "mustard"), None);
         assert_eq!(set.get_from_lang("en", "nope"), None);
     }
@@ -217,8 +227,21 @@ mod test_token {
         ]);
         set.set_fallback_language("en");
 
-        assert_eq!(set.get("tree"), Some("arbre".to_string()));
-        assert_eq!(set.get("mustard"), Some("mustard".to_string()));
+        assert_eq!(set.get("tree"), Some("arbre"));
+        assert_eq!(set.get("mustard"), Some("mustard"));
         assert_eq!(set.get("nope"), None);
+    }
+
+    #[test]
+    fn test_index() {
+        let mut set = LanguageSet::new("fr", &[
+            embedded_language!("../examples/en.lang.json"),
+            embedded_language!("../examples/fr.lang.json"),
+        ]);
+        set.set_fallback_language("en");
+
+        assert_eq!(set["tree"], "arbre".to_string());
+        assert_eq!(set["mustard"], "mustard".to_string());
+        assert_eq!(set["nope"], "".to_string());
     }
 }

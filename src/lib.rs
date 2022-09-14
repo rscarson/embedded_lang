@@ -5,7 +5,7 @@
 //! 
 //! Usage example:
 //! ```rust
-//! use embedded_lang::{ LanguageSet, embedded_language, get_string };
+//! use embedded_lang::{ LanguageSet, embedded_language };
 //! 
 //! fn main() {
 //!     let mut translator = LanguageSet::new("fr", &[
@@ -14,13 +14,13 @@
 //!     ]);
 //!     translator.set_fallback_language("en");
 //! 
-//!     assert_eq!(get_string!(translator, "tree"), "arbre".to_string());
+//!     assert_eq!(translator["tree"], "arbre".to_string());
 //! }
 //! ```
 //! 
 //! LanguageSets have a current language, and a fallback language from which strings will be fetched
 //! if the current language is missing the requested string.
-#![doc(html_root_url = "https://docs.rs/embedded-lang/0.6.0")]
+#![doc(html_root_url = "https://docs.rs/embedded-lang/0.7.0")]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
 

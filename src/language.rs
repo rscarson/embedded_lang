@@ -65,8 +65,11 @@ impl Language {
 	/// 
 	/// # Arguments
 	/// * `name` - String to find
-    pub fn get(&self, name: &str) -> Option<String> {
-        self.strings.get(name).cloned()
+    pub fn get(&self, name: &str) -> Option<&str> {
+        match self.strings.get(name) {
+            None => None,
+            Some(s) => Some(s.as_str())
+        }
     }
 }
 
@@ -106,7 +109,7 @@ mod test_token {
     fn test_get() {
         let lang = embedded_language!("../examples/en.lang.json");
         
-        assert_eq!(lang.get("hello_msg"), Some("hello world!".to_string()));
+        assert_eq!(lang.get("hello_msg"), Some("hello world!"));
         assert_eq!(lang.get("goodbye_msg"), None);
     }
 }

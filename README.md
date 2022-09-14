@@ -10,7 +10,7 @@ Please see the examples directory for language file samples
 
 Usage example:
 ```rust
-use embedded_lang::{ LanguageSet, embedded_language, get_string };
+use embedded_lang::{ LanguageSet, embedded_language };
 
 fn main() {
     let mut translator = LanguageSet::new("fr", &[
@@ -19,7 +19,7 @@ fn main() {
     ]);
     translator.set_fallback_language("en");
 
-    assert_eq!(get_string!(translator, "tree"), "arbre".to_string());
+    assert_eq!(translator["tree"], "arbre".to_string());
 }
 ```
 
