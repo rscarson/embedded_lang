@@ -1,28 +1,27 @@
 //! A small library to provide translation strings as an embedded resource
 //! Language files are in JSON format and will be embedded into the binary at compile time.
-//! 
+//!
 //! Please see the examples directory for language file samples
-//! 
+//!
 //! Usage example:
 //! ```rust
 //! use embedded_lang::{ LanguageSet, embedded_language };
-//! 
+//!
 //! fn main() {
 //!     let mut translator = LanguageSet::new("fr", &[
 //!         embedded_language!("../examples/en.lang.json"),
 //!         embedded_language!("../examples/fr.lang.json"),
 //!     ]);
 //!     translator.set_fallback_language("en");
-//! 
+//!
 //!     assert_eq!(translator["tree"], "arbre".to_string());
 //! }
 //! ```
-//! 
+//!
 //! LanguageSets have a current language, and a fallback language from which strings will be fetched
 //! if the current language is missing the requested string.
-#![doc(html_root_url = "https://docs.rs/embedded-lang/0.7.0")]
+#![doc(html_root_url = "https://docs.rs/embedded-lang/0.8.0")]
 #![warn(missing_docs)]
-#![warn(rustdoc::missing_doc_code_examples)]
 
 mod language;
 mod language_set;

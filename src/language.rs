@@ -97,9 +97,13 @@ impl Language {
             }
         }
 
-        match pos.unwrap() {
-            LanguageStringObject::Direct(s) => Some(s),
-            LanguageStringObject::Category(_) => None,
+        if let Some(pos) = pos {
+            match pos {
+                LanguageStringObject::Direct(s) => Some(s),
+                LanguageStringObject::Category(_) => None,
+            }
+        } else {
+            None
         }
     }
 }
