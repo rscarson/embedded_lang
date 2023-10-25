@@ -4,6 +4,11 @@
     "strings": {
         "tree": "tree",
         "mustard": "mustard",
-        "hello_msg": "hello world!"
+        "hello_msg": "hello world!",
+        "category": {
+            "category2": {
+                "foo": "bar"
+            }
+        }
     }
 }

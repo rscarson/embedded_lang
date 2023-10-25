@@ -1,74 +1,105 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Part of a path to a string
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+#[serde(untagged)]
+pub enum LanguageStringObject {
+    /// A string endpoint
+    Direct(String),
+
+    /// Part of a path to an endpoint
+    Category(HashMap<String, LanguageStringObject>),
+}
+
 /// Represents a single language lookup instance
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Language {
     name: String,
     short_name: String,
-    strings: HashMap::<String, String>
+    strings: HashMap<String, LanguageStringObject>,
 }
 
 impl Language {
-	/// Create a new language instance
-	/// 
-	/// # Arguments
-	/// * `name` - Full language name
-	/// * `short_name` - Language code
-	/// * `strings` - Language lookup table
-    pub fn new(name: String, short_name: String, strings: HashMap::<String, String>) -> Self {
-        Self { name, short_name, strings }
+    /// Create a new language instance
+    ///
+    /// # Arguments
+    /// * `name` - Full language name
+    /// * `short_name` - Language code
+    /// * `strings` - Language lookup table
+    pub fn new(
+        name: String,
+        short_name: String,
+        strings: HashMap<String, LanguageStringObject>,
+    ) -> Self {
+        Self {
+            name,
+            short_name,
+            strings,
+        }
     }
 
-	/// Read language from a JSON string
-	/// 
-	/// # Arguments
-	/// * `path` - Path to the file
+    /// Read language from a JSON string
+    ///
+    /// # Arguments
+    /// * `path` - Path to the file
     pub fn new_from_string(json: &str) -> Result<Self, String> {
         match serde_json::from_str(json) {
-			Ok(lang) => Ok(lang),
-			Err(e) => Err(e.to_string())
-		}
+            Ok(lang) => Ok(lang),
+            Err(e) => Err(e.to_string()),
+        }
     }
 
-	/// Read language from a file
-	/// 
-	/// # Arguments
-	/// * `path` - Path to the file
+    /// Read language from a file
+    ///
+    /// # Arguments
+    /// * `path` - Path to the file
     pub fn new_from_file(path: &str) -> Result<Self, String> {
         match std::fs::read_to_string(path) {
-			Ok(json) => {
-                Self::new_from_string(&json)
-			},
-			Err(e) => {
-				Err(e.to_string())
-			}
-		}
+            Ok(json) => Self::new_from_string(&json),
+            Err(e) => Err(e.to_string()),
+        }
     }
 
-    /// Get full language name 
+    /// Get full language name
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    /// Get language code 
+    /// Get language code
     pub fn short_name(&self) -> &str {
         &self.short_name
     }
 
-    /// Get language lookup table 
-    pub fn strings(&self) -> &HashMap::<String, String> {
+    /// Get language lookup table
+    pub fn strings(&self) -> &HashMap<String, LanguageStringObject> {
         &self.strings
     }
 
     /// Look up a string in the given language
-	/// 
-	/// # Arguments
-	/// * `name` - String to find
+    ///
+    /// # Arguments
+    /// * `name` - String to find
     pub fn get(&self, name: &str) -> Option<&str> {
-        match self.strings.get(name) {
-            None => None,
-            Some(s) => Some(s.as_str())
+        let mut path = name.split("\\").peekable();
+        if path.peek().is_none() {
+            return None;
+        }
+
+        let mut pos = self.strings.get(path.next().unwrap());
+        for item in path {
+            if pos.is_none() {
+                return None;
+            }
+            match pos.unwrap() {
+                LanguageStringObject::Direct(s) => return Some(s),
+                LanguageStringObject::Category(c) => pos = c.get(item),
+            }
+        }
+
+        match pos.unwrap() {
+            LanguageStringObject::Direct(s) => Some(s),
+            LanguageStringObject::Category(_) => None,
         }
     }
 }
@@ -82,9 +113,9 @@ mod test_token {
     #[test]
     fn test_new_from_string() {
         if let Ok(s) = std::fs::read_to_string("examples/en.lang.json") {
-			let lang = Language::new_from_string(&s).unwrap();
+            let lang = Language::new_from_string(&s).unwrap();
             assert_eq!(lang.short_name(), "en");
-		}
+        }
     }
 
     #[test]
@@ -108,7 +139,7 @@ mod test_token {
     #[test]
     fn test_get() {
         let lang = embedded_language!("../examples/en.lang.json");
-        
+
         assert_eq!(lang.get("hello_msg"), Some("hello world!"));
         assert_eq!(lang.get("goodbye_msg"), None);
     }
