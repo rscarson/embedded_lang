@@ -1,6 +1,6 @@
-use std::ops::Index;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::ops::Index;
 
 use crate::Language;
 
@@ -9,21 +9,29 @@ use crate::Language;
 pub struct LanguageSet {
     current: String,
     fallback: String,
-    languages: HashMap::<String, Language>
+    languages: HashMap<String, Language>,
 }
 
 impl LanguageSet {
-	/// Create a new language instance
-	/// 
-	/// # Arguments
-	/// * `fallback_language` - Language code for the fallback language
-	/// * `languages` - Array of language instances to use
+    /// Create a new language instance
+    ///
+    /// # Arguments
+    /// * `fallback_language` - Language code for the fallback language
+    /// * `languages` - Array of language instances to use
     pub fn new(fallback_language: &str, languages: &[Language]) -> Self {
         Self {
             current: fallback_language.to_string(),
             fallback: fallback_language.to_string(),
-            languages: languages.iter().map(|l| (l.short_name().to_string(), l.clone())).collect()
+            languages: languages
+                .iter()
+                .map(|l| (l.short_name().to_string(), l.clone()))
+                .collect(),
         }
+    }
+
+    /// List all supported languages
+    pub fn all_languages(&self) -> Vec<Language> {
+        self.languages.values().cloned().collect()
     }
 
     /// Return the set's fallback language
@@ -37,31 +45,32 @@ impl LanguageSet {
     }
 
     /// Add a language to the set
-	/// 
-	/// # Arguments
-	/// * `language` - New language
+    ///
+    /// # Arguments
+    /// * `language` - New language
     pub fn add_language(&mut self, language: Language) {
-        self.languages.insert(language.short_name().to_string(), language);
+        self.languages
+            .insert(language.short_name().to_string(), language);
     }
 
     /// Add a language from a JSON file to the set
-	/// 
-	/// # Arguments
-	/// * `language` - New language
+    ///
+    /// # Arguments
+    /// * `language` - New language
     pub fn load_language(&mut self, filename: &str) -> Result<(), String> {
         match Language::new_from_file(filename) {
             Ok(lang) => {
                 self.add_language(lang);
                 Ok(())
-            },
-            Err(e) => Err(e)
+            }
+            Err(e) => Err(e),
         }
     }
 
     /// Set the fallback language for lookups
-	/// 
-	/// # Arguments
-	/// * `language` - New language
+    ///
+    /// # Arguments
+    /// * `language` - New language
     pub fn set_fallback_language(&mut self, language: &str) -> bool {
         if self.languages.contains_key(language) {
             self.fallback = language.to_string();
@@ -72,9 +81,11 @@ impl LanguageSet {
     }
 
     /// Set the current language for lookups
-	/// 
-	/// # Arguments
-	/// * `language` - New language
+    ///
+    /// # Arguments
+    /// * `language` - New language
+    ///
+    /// returns false if the language code is not recognized
     pub fn set_language(&mut self, language: &str) -> bool {
         if self.languages.contains_key(language) {
             self.current = language.to_string();
@@ -85,14 +96,14 @@ impl LanguageSet {
     }
 
     /// Look up a string in a specific language
-	/// 
-	/// # Arguments
-	/// * `language` - Language to search
-	/// * `name` - String to find
+    ///
+    /// # Arguments
+    /// * `language` - Language to search
+    /// * `name` - String to find
     pub fn get_from_lang(&self, language: &str, name: &str) -> Option<&str> {
         if let Some(lang) = self.languages.get(language) {
             if let Some(s) = lang.get(name) {
-                return Some(s)
+                return Some(s);
             }
         }
 
@@ -100,16 +111,16 @@ impl LanguageSet {
     }
 
     /// Look up a string
-	/// 
-	/// # Arguments
-	/// * `name` - String to find
+    ///
+    /// # Arguments
+    /// * `name` - String to find
     pub fn get(&self, name: &str) -> Option<&str> {
         if let Some(s) = self.get_from_lang(&self.current, name) {
-            return Some(s)
+            return Some(s);
         }
-        
+
         if let Some(s) = self.get_from_lang(&self.fallback, name) {
-            return Some(s)
+            return Some(s);
         }
 
         None
@@ -124,7 +135,6 @@ impl Index<&str> for LanguageSet {
     }
 }
 
-
 #[cfg(test)]
 mod test_token {
     use super::*;
@@ -133,11 +143,14 @@ mod test_token {
 
     #[test]
     fn test_current_language() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
-        
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
+
         assert_eq!(set.current_language().unwrap().short_name(), "fr");
         set.set_language("en");
         assert_eq!(set.current_language().unwrap().short_name(), "en");
@@ -145,11 +158,14 @@ mod test_token {
 
     #[test]
     fn test_fallback_language() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
-        
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
+
         assert_eq!(set.fallback_language().unwrap().short_name(), "fr");
         set.set_fallback_language("en");
         assert_eq!(set.fallback_language().unwrap().short_name(), "en");
@@ -157,22 +173,16 @@ mod test_token {
 
     #[test]
     fn test_add_language() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
+        let mut set = LanguageSet::new("fr", &[embedded_language!("../examples/fr.lang.json")]);
 
-        set.add_language(
-            embedded_language!("../examples/en.lang.json")
-        );
+        set.add_language(embedded_language!("../examples/en.lang.json"));
 
         assert_eq!(set.set_language("en"), true);
     }
 
     #[test]
     fn test_load_language() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
+        let mut set = LanguageSet::new("fr", &[embedded_language!("../examples/fr.lang.json")]);
 
         assert_eq!(set.load_language("examples/en.lang.json").is_ok(), true);
         assert_eq!(set.set_language("en"), true);
@@ -180,38 +190,47 @@ mod test_token {
 
     #[test]
     fn test_set_fallback_language() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
-        
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
+
         assert_eq!(set.set_fallback_language("en"), true);
         assert_eq!(set.fallback_language().unwrap().short_name(), "en");
-        
+
         assert_eq!(set.set_fallback_language("foo"), false);
         assert_eq!(set.fallback_language().unwrap().short_name(), "en");
     }
 
     #[test]
     fn test_set_language() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
-        
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
+
         assert_eq!(set.set_language("en"), true);
         assert_eq!(set.current_language().unwrap().short_name(), "en");
-        
+
         assert_eq!(set.set_language("foo"), false);
         assert_eq!(set.current_language().unwrap().short_name(), "en");
     }
 
     #[test]
     fn test_get_from_lang() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
         set.set_fallback_language("en");
 
         assert_eq!(set.get_from_lang("fr", "tree"), Some("arbre"));
@@ -221,10 +240,13 @@ mod test_token {
 
     #[test]
     fn test_get() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
         set.set_fallback_language("en");
 
         assert_eq!(set.get("tree"), Some("arbre"));
@@ -234,10 +256,13 @@ mod test_token {
 
     #[test]
     fn test_index() {
-        let mut set = LanguageSet::new("fr", &[
-            embedded_language!("../examples/en.lang.json"),
-            embedded_language!("../examples/fr.lang.json"),
-        ]);
+        let mut set = LanguageSet::new(
+            "fr",
+            &[
+                embedded_language!("../examples/en.lang.json"),
+                embedded_language!("../examples/fr.lang.json"),
+            ],
+        );
         set.set_fallback_language("en");
 
         assert_eq!(set["tree"], "arbre".to_string());
