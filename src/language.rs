@@ -12,12 +12,45 @@ pub enum LanguageStringObject {
     Category(HashMap<String, LanguageStringObject>),
 }
 
+impl LanguageStringObject {
+    /// Flatten a LanguageStringObject tree into a flat object
+    pub fn flatten(&self, own_key: &str) -> HashMap<String, String> {
+        let mut map = HashMap::<String, String>::default();
+        match self {
+            LanguageStringObject::Direct(s) => {
+                map.insert(own_key.to_string(), s.clone());
+            }
+            LanguageStringObject::Category(c) => map.extend(Self::flatten_all(c, Some(own_key))),
+        };
+        map
+    }
+
+    fn flatten_all(
+        c: &HashMap<String, LanguageStringObject>,
+        root_key: Option<&str>,
+    ) -> HashMap<String, String> {
+        let mut map = HashMap::<String, String>::default();
+        c.iter().for_each(|e| {
+            let key = if root_key.is_some() {
+                format!("{}\\{}", root_key.unwrap(), e.0)
+            } else {
+                e.0.clone()
+            };
+            map.extend(e.1.flatten(&key))
+        });
+        map
+    }
+}
+
 /// Represents a single language lookup instance
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Language {
     name: String,
     short_name: String,
     strings: HashMap<String, LanguageStringObject>,
+
+    #[serde(default)]
+    resources: HashMap<String, Vec<u8>>,
 }
 
 impl Language {
@@ -31,11 +64,13 @@ impl Language {
         name: String,
         short_name: String,
         strings: HashMap<String, LanguageStringObject>,
+        resources: HashMap<String, Vec<u8>>,
     ) -> Self {
         Self {
             name,
             short_name,
             strings,
+            resources,
         }
     }
 
@@ -43,9 +78,15 @@ impl Language {
     ///
     /// # Arguments
     /// * `path` - Path to the file
-    pub fn new_from_string(json: &str) -> Result<Self, String> {
-        match serde_json::from_str(json) {
-            Ok(lang) => Ok(lang),
+    pub fn new_from_string(
+        json: &str,
+        resources: HashMap<String, Vec<u8>>,
+    ) -> Result<Self, String> {
+        match serde_json::from_str::<Self>(json) {
+            Ok(mut lang) => {
+                lang.resources = resources;
+                Ok(lang)
+            }
             Err(e) => Err(e.to_string()),
         }
     }
@@ -54,9 +95,9 @@ impl Language {
     ///
     /// # Arguments
     /// * `path` - Path to the file
-    pub fn new_from_file(path: &str) -> Result<Self, String> {
+    pub fn new_from_file(path: &str, resources: HashMap<String, Vec<u8>>) -> Result<Self, String> {
         match std::fs::read_to_string(path) {
-            Ok(json) => Self::new_from_string(&json),
+            Ok(json) => Self::new_from_string(&json, resources),
             Err(e) => Err(e.to_string()),
         }
     }
@@ -72,8 +113,8 @@ impl Language {
     }
 
     /// Get language lookup table
-    pub fn strings(&self) -> &HashMap<String, LanguageStringObject> {
-        &self.strings
+    pub fn strings(&self) -> HashMap<String, String> {
+        LanguageStringObject::flatten_all(&self.strings, None)
     }
 
     /// Look up a string in the given language
@@ -106,6 +147,20 @@ impl Language {
             None
         }
     }
+
+    /// Return an embedded resource as a utf8 string
+    pub fn utf8_resource(&self, name: &str) -> Option<&str> {
+        self.resources
+            .get(name)
+            .and_then(|bytes| std::str::from_utf8(&bytes.as_slice()).ok())
+    }
+
+    /// Return an embedded resource as a slice of bytes
+    pub fn binary_resource(&self, name: &str) -> Option<&[u8]> {
+        self.resources
+            .get(name)
+            .and_then(|bytes| Some(bytes.as_slice()))
+    }
 }
 
 #[cfg(test)]
@@ -117,14 +172,14 @@ mod test_token {
     #[test]
     fn test_new_from_string() {
         if let Ok(s) = std::fs::read_to_string("examples/en.lang.json") {
-            let lang = Language::new_from_string(&s).unwrap();
+            let lang = Language::new_from_string(&s, HashMap::default()).unwrap();
             assert_eq!(lang.short_name(), "en");
         }
     }
 
     #[test]
     fn test_new_from_file() {
-        let lang = Language::new_from_file("examples/en.lang.json").unwrap();
+        let lang = Language::new_from_file("examples/en.lang.json", HashMap::default()).unwrap();
         assert_eq!(lang.short_name(), "en");
     }
 

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::Index;
 
 use crate::Language;
@@ -57,13 +57,44 @@ impl LanguageSet {
     ///
     /// # Arguments
     /// * `language` - New language
-    pub fn load_language(&mut self, filename: &str) -> Result<(), String> {
-        match Language::new_from_file(filename) {
+    pub fn load_language(
+        &mut self,
+        filename: &str,
+        resources: HashMap<String, Vec<u8>>,
+    ) -> Result<(), String> {
+        match Language::new_from_file(filename, resources) {
             Ok(lang) => {
                 self.add_language(lang);
                 Ok(())
             }
             Err(e) => Err(e),
+        }
+    }
+
+    /// Check the completeness of all language packs against the fallback
+    /// Returns the list of missing strings for each language
+    pub fn verify(&self) -> HashMap<String, Vec<String>> {
+        if let Some(fallback) = self
+            .fallback_language()
+            .and_then(|l| Some(l.strings().keys().cloned().collect::<HashSet<String>>()))
+        {
+            self.languages
+                .iter()
+                .map(|l| {
+                    (
+                        l.0.clone(),
+                        l.1.strings()
+                            .keys()
+                            .cloned()
+                            .collect::<HashSet<String>>()
+                            .difference(&fallback)
+                            .cloned()
+                            .collect(),
+                    )
+                })
+                .collect::<HashMap<String, Vec<String>>>()
+        } else {
+            HashMap::default()
         }
     }
 
@@ -102,12 +133,10 @@ impl LanguageSet {
     /// * `name` - String to find
     pub fn get_from_lang(&self, language: &str, name: &str) -> Option<&str> {
         if let Some(lang) = self.languages.get(language) {
-            if let Some(s) = lang.get(name) {
-                return Some(s);
-            }
+            lang.get(name)
+        } else {
+            None
         }
-
-        None
     }
 
     /// Look up a string
@@ -115,15 +144,25 @@ impl LanguageSet {
     /// # Arguments
     /// * `name` - String to find
     pub fn get(&self, name: &str) -> Option<&str> {
-        if let Some(s) = self.get_from_lang(&self.current, name) {
-            return Some(s);
-        }
+        self.current_language()
+            .and_then(|l| l.get(name))
+            .or(self.fallback_language().and_then(|l| l.get(name)))
+    }
 
-        if let Some(s) = self.get_from_lang(&self.fallback, name) {
-            return Some(s);
-        }
+    /// Return an embedded resource as a utf8 string
+    pub fn utf8_resource(&self, name: &str) -> Option<&str> {
+        self.current_language()
+            .and_then(|l| l.utf8_resource(name))
+            .or(self.fallback_language().and_then(|l| l.utf8_resource(name)))
+    }
 
-        None
+    /// Return an embedded resource as a slice of bytes
+    pub fn binary_resource(&self, name: &str) -> Option<&[u8]> {
+        self.current_language()
+            .and_then(|l| l.binary_resource(name))
+            .or(self
+                .fallback_language()
+                .and_then(|l| l.binary_resource(name)))
     }
 }
 
@@ -184,7 +223,11 @@ mod test_token {
     fn test_load_language() {
         let mut set = LanguageSet::new("fr", &[embedded_language!("../examples/fr.lang.json")]);
 
-        assert_eq!(set.load_language("examples/en.lang.json").is_ok(), true);
+        assert_eq!(
+            set.load_language("examples/en.lang.json", HashMap::default())
+                .is_ok(),
+            true
+        );
         assert_eq!(set.set_language("en"), true);
     }
 
