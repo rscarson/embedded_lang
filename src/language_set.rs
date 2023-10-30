@@ -180,7 +180,7 @@ impl LanguageSet {
 
     /// Get an attachment
     pub fn attachment<T: Serialize + DeserializeOwned + for<'a> Deserialize<'a>>(
-        &mut self,
+        &self,
         name: &str,
     ) -> Option<T> {
         self.current_language()
