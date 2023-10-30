@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Part of a path to a string
@@ -43,7 +43,7 @@ impl LanguageStringObject {
 }
 
 /// Represents a single language lookup instance
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Language {
     name: String,
     short_name: String,
@@ -51,6 +51,9 @@ pub struct Language {
 
     #[serde(default)]
     resources: HashMap<String, Vec<u8>>,
+
+    #[serde(skip_serializing, default)]
+    attachments: HashMap<String, serde_json::Value>,
 }
 
 impl Language {
@@ -71,6 +74,30 @@ impl Language {
             short_name,
             strings,
             resources,
+            attachments: HashMap::default(),
+        }
+    }
+
+    /// Attach a document to this language
+    pub fn attach<T: Serialize + DeserializeOwned + for<'a> Deserialize<'a>>(
+        &mut self,
+        name: &str,
+        attachment: T,
+    ) -> Result<(), serde_json::Error> {
+        self.attachments
+            .insert(name.to_string(), serde_json::to_value(attachment)?);
+        Ok(())
+    }
+
+    /// Get an attachment
+    pub fn attachment<T: Serialize + DeserializeOwned + for<'a> Deserialize<'a>>(
+        &self,
+        name: &str,
+    ) -> Option<T> {
+        if let Some(v) = self.attachments.get(name) {
+            serde_json::from_value(v.clone()).ok()
+        } else {
+            None
         }
     }
 

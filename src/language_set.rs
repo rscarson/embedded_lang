@@ -1,3 +1,4 @@
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::ops::Index;
@@ -163,6 +164,28 @@ impl LanguageSet {
             .or(self
                 .fallback_language()
                 .and_then(|l| l.binary_resource(name)))
+    }
+
+    /// Attach a document to a language
+    pub fn attach<T: Serialize + DeserializeOwned + for<'a> Deserialize<'a>>(
+        &mut self,
+        language: &str,
+        name: &str,
+        attachment: T,
+    ) {
+        if let Some(lang) = self.languages.get_mut(language) {
+            lang.attach(name, attachment).ok();
+        }
+    }
+
+    /// Get an attachment
+    pub fn attachment<T: Serialize + DeserializeOwned + for<'a> Deserialize<'a>>(
+        &mut self,
+        name: &str,
+    ) -> Option<T> {
+        self.current_language()
+            .and_then(|l| l.attachment(name))
+            .or(self.fallback_language().and_then(|l| l.attachment(name)))
     }
 }
 
